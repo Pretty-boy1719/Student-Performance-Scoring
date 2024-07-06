@@ -11,6 +11,8 @@ APP_TITLE = "GradAPI"
 UPLOAD_FOLDER = "./upload_files"
 # File extensions that are allowed to be uploaded
 ALLOWED_EXTENSIONS = {"xlsx", "json"}
+HOST = "0.0.0.0"
+PORT = int(os.environ.get("PORT", 5000))
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -70,4 +72,4 @@ def internal_server_wrong(error_description):
 
 
 if __name__ == "__main__":
-	app.run()
+	app.run(host=HOST, port=PORT)
