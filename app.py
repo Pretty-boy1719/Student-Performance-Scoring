@@ -34,11 +34,11 @@ def upload_data() -> str:
         file = request.files["file"]
         
         if not file.filename:
-        	print("No filename!")
+            print("No filename!")
             return Response("Uploading failed! You didn't attach the file. Try again.", status=400)
 
         if not allowed_filename(file.filename):
-        	print("No allowed filename!")
+            print("No allowed filename!")
             return Response(f"Uploading failed! Not allowed datafile format. There are possible variants: {str(ALLOWED_EXTENSIONS)}", status=400)
 
         if file and allowed_filename(file.filename):
