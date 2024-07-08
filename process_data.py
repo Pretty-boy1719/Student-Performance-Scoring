@@ -1,6 +1,7 @@
 from openpyxl import load_workbook
 import os
 
+
 def xlsx_to_json(file: str) -> dict:
 	""" Function to convert XLSX file to Python Dict """
 	if os.path.isfile(file):
