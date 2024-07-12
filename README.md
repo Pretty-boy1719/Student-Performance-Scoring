@@ -20,9 +20,10 @@ XLSX file with the following columns (mark the grades odf student for missing su
 JSON file like this:
 
 ```
-{
-
-}
+[{'Номер ЛД': 1, 'Ожидаемое число двоек': 1},
+ {'Номер ЛД': 2, 'Ожидаемое число двоек': 0},
+ {'Номер ЛД': 3, 'Ожидаемое число двоек': 1},
+ {'Номер ЛД': 4, 'Ожидаемое число двоек': 2}]
 ```
 
 ## Functional Testing Instructions
