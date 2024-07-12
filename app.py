@@ -2,7 +2,6 @@ from flask import Flask, jsonify, request, render_template, Response
 from werkzeug.utils import secure_filename
 from process_data import xlsx_to_data_frame
 import pandas as pd
-import logging
 import joblib
 import json
 import os
@@ -48,6 +47,7 @@ def upload_data() -> str:
 				# I haven't figured out how to handle a byte stream like XLSX, so that way
 				filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 				file.save(filepath)
+				'''
 				try:
 					data = xlsx_to_data_frame(filepath)
 				except Exception as error:
@@ -55,15 +55,15 @@ def upload_data() -> str:
 					os.remove(filepath)
 					return Response("Processing failed! Incorrect data format.", status=400)
 				os.remove(filepath)
+				'''
+			data = xlsx_to_data_frame(filepath)
 
 			# There is no support for JSON files now!
 			# elif filename.endswith("json"):
 			#	data = json.loads(file.read())
 			
-			logging.info("POST 200")
 			return jsonify(model.predict(data).tolist())
 
-	logging.info("GET 200")
 	return render_template("get.html", app_title=APP_TITLE)
 
 
