@@ -47,16 +47,13 @@ def upload_data() -> str:
 				# I haven't figured out how to handle a byte stream like XLSX, so that way
 				filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 				file.save(filepath)
-				'''
 				try:
 					data = xlsx_to_data_frame(filepath)
 				except Exception as error:
 					print(error)
 					os.remove(filepath)
-					return Response("Processing failed! Incorrect data format.", status=400)
+					return Response(str(error), status=400)
 				os.remove(filepath)
-				'''
-			data = xlsx_to_data_frame(filepath)
 
 			# There is no support for JSON files now!
 			# elif filename.endswith("json"):
