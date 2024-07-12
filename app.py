@@ -1,20 +1,24 @@
 from flask import Flask, jsonify, request, render_template, Response
 from werkzeug.utils import secure_filename
-from process_data import xlsx_to_json
-from predictor import predict
+from process_data import xlsx_to_data_frame
+import pandas as pd
+import logging
+import joblib
 import json
 import os
 
 
 APP_TITLE = "GradAPI"
-UPLOAD_FOLDER = "./upload_files" # Folder to save downloaded files
-ALLOWED_EXTENSIONS = {"xlsx", "json"} # File extensions that are allowed to be uploaded
+UPLOAD_FOLDER = "./data" # Folder to save downloaded files
+ALLOWED_EXTENSIONS = {"xlsx"} # File extensions that are allowed to be uploaded
 HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", 5000)) # For OnRender app
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER # Folder to process excel files
 app.config["SECRET_KEY"] = str(os.getenv("SECRET_KEY")) # For OnRender app
+
+model = joblib.load("model/catboost_model.joblib") # Predicting model
 
 
 def allowed_filename(filename: str) -> bool:
@@ -32,33 +36,34 @@ def upload_data() -> str:
 		file = request.files["file"]
 		
 		if not file.filename:
-			print("No filename!")
 			return Response("Uploading failed! You didn't attach the file. Try again.", status=400)
 
 		if not allowed_filename(file.filename):
-			print("No allowed filename!")
 			return Response(f"Uploading failed! Not allowed datafile format. There are possible variants: {str(ALLOWED_EXTENSIONS)}", status=400)
 
 		if file and allowed_filename(file.filename):
 			filename = secure_filename(file.filename)
 
 			if filename.endswith("xlsx"):
-				## TODO: я не придумал, как обрабатывать поток байтов как XLSX - поэтому пока так
+				# I haven't figured out how to handle a byte stream like XLSX, so that way
 				filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 				file.save(filepath)
 				try:
-					data = xlsx_to_json(filepath)
-				except Exception:
+					data = xlsx_to_data_frame(filepath)
+				except Exception as error:
+					print(error)
 					os.remove(filepath)
 					return Response("Processing failed! Incorrect data format.", status=400)
 				os.remove(filepath)
 
-			elif filename.endswith("json"):
-				data = json.loads(file.read())
+			# There is no support for JSON files now!
+			# elif filename.endswith("json"):
+			#	data = json.loads(file.read())
+			
+			logging.info("POST 200")
+			return jsonify(model.predict(data).tolist())
 
-			# Some Predictor (from predictor.py) works here
-			return jsonify(predict(data))
-
+	logging.info("GET 200")
 	return render_template("get.html", app_title=APP_TITLE)
 
 
