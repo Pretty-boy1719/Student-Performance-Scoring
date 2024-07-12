@@ -53,11 +53,11 @@ def upload_data() -> str:
 				os.remove(filepath)
 				return Response("Processing failed! Supposedly, incorrect format of data. Detailed description of the error: " + str(error), status=400)
 
-			personalities = pd.read_excel(filepath).copy()["Номер ЛД"]
+			personalities = pd.read_excel(filepath).copy()
 			print(model.predict(data).tolist())
 			os.remove(filepath)
 
-			return jsonify([{"Номер ЛД": p_file, "Ожидаемое число двоек": c_twos} for p_file, c_twos in zip(personalities.tolist(), list(map(lambda x: x[0], model.predict(data).tolist())))])
+			return jsonify([{"Номер ЛД": p_file, "Учебный год": year, "Полугодие": semester, "Ожидаемое число двоек": c_twos} for p_file, year, semester, c_twos in zip(personalities["Номер ЛД"].tolist(), personalities["Учебный год"].tolist(), personalities["Полугодие"].tolist(), list(map(lambda x: x[0], model.predict(data).tolist())))])
 
 	return render_template("get.html", app_title=APP_TITLE)
 
