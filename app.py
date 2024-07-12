@@ -30,12 +30,12 @@ def upload_data() -> str:
 	""" Function to accept the dataset and to give the forecast """
 	if request.method == 'POST':
 		if "file" not in request.files:
-			return Response("Uploading failed! Try again.", status=500)
+			return Response("Uploading failed! You didn't attach any file. Try again.", status=400)
 
 		file = request.files["file"]
 		
 		if not file.filename:
-			return Response("Uploading failed! You didn't attach the file. Try again.", status=400)
+			return Response("Uploading failed! You didn't attach any file. Try again.", status=400)
 
 		if not allowed_filename(file.filename):
 			return Response(f"Uploading failed! Not allowed datafile format. There are possible variants: {str(ALLOWED_EXTENSIONS)}", status=400)
@@ -43,22 +43,21 @@ def upload_data() -> str:
 		if file and allowed_filename(file.filename):
 			filename = secure_filename(file.filename)
 
-			if filename.endswith("xlsx"):
-				# I haven't figured out how to handle a byte stream like XLSX, so that way
-				filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-				file.save(filepath)
-				try:
-					data = xlsx_to_data_frame(filepath)
-				except Exception as error:
-					os.remove(filepath)
-					return Response("Processing failed! Supposedly, incorrect format of data. Detailed description of the error: " + str(error), status=400)
-				os.remove(filepath)
+			# I haven't figured out how to handle a byte stream like XLSX, so that way
+			filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+			file.save(filepath)
 
-			# There is no support for JSON files now!
-			# elif filename.endswith("json"):
-			#	data = json.loads(file.read())
-			
-			return jsonify(model.predict(data).tolist())
+			try:
+				data = xlsx_to_data_frame(filepath)
+			except Exception as error:
+				os.remove(filepath)
+				return Response("Processing failed! Supposedly, incorrect format of data. Detailed description of the error: " + str(error), status=400)
+
+			personalities = pd.read_excel(filepath).copy()["Номер ЛД"]
+			print(model.predict(data).tolist())
+			os.remove(filepath)
+
+			return jsonify([{"Номер ЛД": p_file, "Ожидаемое число двоек": c_twos} for p_file, c_twos in zip(personalities.tolist(), list(map(lambda x: x[0], model.predict(data).tolist())))])
 
 	return render_template("get.html", app_title=APP_TITLE)
 
