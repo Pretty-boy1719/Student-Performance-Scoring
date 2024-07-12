@@ -50,9 +50,8 @@ def upload_data() -> str:
 				try:
 					data = xlsx_to_data_frame(filepath)
 				except Exception as error:
-					print(error)
 					os.remove(filepath)
-					return Response(str(error), status=400)
+					return Response("Processing failed! Supposedly, incorrect format of data. Detailed description of the error: " + str(error), status=400)
 				os.remove(filepath)
 
 			# There is no support for JSON files now!
