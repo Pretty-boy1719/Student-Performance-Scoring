@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, render_template, Response
 from werkzeug.utils import secure_filename
-from process_data import xlsx_to_data_frame
+from model.data_transform import data_trans
 import pandas as pd
 import joblib
 import json
@@ -48,16 +48,13 @@ def upload_data() -> str:
 			file.save(filepath)
 
 			try:
-				data = xlsx_to_data_frame(filepath)
+				list_pers, list_years, list_sems, data = data_trans(filepath)
 			except Exception as error:
 				os.remove(filepath)
 				return Response("Processing failed! Supposedly, incorrect format of data. Detailed description of the error: " + str(error), status=400)
-
-			personalities = pd.read_excel(filepath).copy()
-			print(model.predict(data).tolist())
 			os.remove(filepath)
 
-			return jsonify([{"Номер ЛД": p_file, "Учебный год": year, "Полугодие": semester, "Ожидаемое число двоек": c_twos} for p_file, year, semester, c_twos in zip(personalities["Номер ЛД"].tolist(), personalities["Учебный год"].tolist(), personalities["Полугодие"].tolist(), list(map(lambda x: x[0], model.predict(data).tolist())))])
+			return jsonify([{"Номер ЛД": p_file, "Учебный год": year, "Полугодие": semester, "Ожидаемое число двоек": c_twos} for p_file, year, semester, c_twos in zip(list_pers, list_years, list_sems, list(map(lambda x: x[0], model.predict(data).tolist())))])
 
 	return render_template("get.html", app_title=APP_TITLE)
 
