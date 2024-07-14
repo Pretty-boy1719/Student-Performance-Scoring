@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, render_template, Response
 from werkzeug.utils import secure_filename
 from model.data_transform import data_trans
 import pandas as pd
+import operator
 import joblib
 import json
 import os
@@ -54,7 +55,15 @@ def upload_data() -> str:
 				return Response("Processing failed! Supposedly, incorrect format of data. Detailed description of the error: " + str(error), status=400)
 			os.remove(filepath)
 
-			return jsonify([{"Номер ЛД": p_file, "Учебный год": year, "Полугодие": semester, "Ожидаемое число двоек": c_twos} for p_file, year, semester, c_twos in zip(list_pers, list_years, list_sems, list(map(lambda x: x[0], model.predict(data).tolist())))])
+			list_twos = list(map(lambda x: x[0], model.predict(data).tolist()))
+
+			res = {}
+			uniq_pers = sorted(set(list_pers))
+			for person_id in uniq_pers:
+				indices = [i for i, x in enumerate(list_pers) if x == person_id]
+				res[person_id] = [{"Учебный год": year, "Полугодие": semester, "Ожидаемое число двоек": c_twos} for year, semester, c_twos in zip(operator.itemgetter(*indices)(list_years), operator.itemgetter(*indices)(list_sems), operator.itemgetter(*indices)(list(map(lambda x: x[0], model.predict(data).tolist()))))]
+			
+			return jsonify(res)
 
 	return render_template("get.html", app_title=APP_TITLE)
 
