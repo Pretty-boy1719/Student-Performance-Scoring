@@ -60,6 +60,20 @@ def data_trans(filepath: os.path) -> pd.core.frame.DataFrame:
     # Преобразование столбца 'Учебный год' в целое число
     new_df["Учебный год"] = new_df["Учебный год"].astype(int)
 
+    def calculate_course(row):
+        admission_year = int(row['Учебная группа'].split('-')[1])
+        study_year = row['Учебный год']
+        half_year = row['Полугодие']
+
+        course = study_year - admission_year + 1
+        if half_year == 'II полугодие':
+            course += 0 
+        return course
+
+    new_df['Курс'] = new_df.apply(calculate_course, axis=1)
+    new_df.insert(3, 'Курс', new_df.pop('Курс'))
+
+
     # Функция для проверки наличия следующего семестра для студента
     def has_next_semester(student_df):
         # Сортировка данных по учебному году и полугодию
