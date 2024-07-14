@@ -47,12 +47,14 @@ def upload_data() -> str:
 			# I haven't figured out how to handle a byte stream like XLSX, so that way
 			filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 			file.save(filepath)
-
+			list_pers, list_years, list_sems, data = data_trans(filepath)
+			'''
 			try:
 				list_pers, list_years, list_sems, data = data_trans(filepath)
 			except Exception as error:
 				os.remove(filepath)
 				return Response("Processing failed! Supposedly, incorrect format of data. Detailed description of the error: " + str(error), status=400)
+			'''
 			os.remove(filepath)
 
 			list_twos = list(map(lambda x: x[0], model.predict(data).tolist()))

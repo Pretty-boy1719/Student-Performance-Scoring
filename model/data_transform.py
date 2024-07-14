@@ -131,8 +131,6 @@ def data_trans(filepath: os.path) -> pd.core.frame.DataFrame:
 
     # Код Кирилла below!
     
-    loaded_ohe = joblib.load(os.path.abspath("model/one_hot_encoder.joblib"))
-
     # Create a column with the sum of the ratings
     cols_to_sum = [f"Предмет_{i}" for i in range(1, 23)]
     filtered_df["сум"] = filtered_df[cols_to_sum].sum(axis=1)
@@ -144,46 +142,57 @@ def data_trans(filepath: os.path) -> pd.core.frame.DataFrame:
 
     cols_to_check = filtered_df.filter(regex="^Предмет_\d+$")
     twos_count = cols_to_check.applymap(count_2s)
-    filtered_df["количество_двоек_сейчас"] = twos_count.sum(axis=1)
+    filtered_df["количество_двоек_сейчас"] = twos_count.sum(axis=1) 
+    
+    #Создаем признак: Средняя оценка
+    subject_columns = ['Предмет_' + str(i) for i in range(1, 23)]
+    data_filtered = filtered_df[subject_columns].applymap(lambda x: x if x != 0 else None)
+    filtered_df['средняя_оценка'] = data_filtered.mean(axis=1)
+    filtered_df['средняя_оценка'] = filtered_df['средняя_оценка'].astype(float)
+    filtered_df['средняя_оценка'] = filtered_df['средняя_оценка'].astype(float)
 
-    # Numerical features
+    #Разбиваем признаки на числовые и категориальные
+    # Числовые признаки
     num_cols = [
-        "Учебный год",
-        "Предмет_1",
-        "Предмет_2",
-        "Предмет_3",
-        "Предмет_4",
-        "Предмет_5",
-        "Предмет_6",
-        "Предмет_7",
-        "Предмет_8",
-        "Предмет_9",
-        "Предмет_10",
-        "Предмет_11",
-        "Предмет_12",
-        "Предмет_13",
-        "Предмет_14",
-        "Предмет_15",
-        "Предмет_16",
-        "Предмет_17",
-        "Предмет_18",
-        "Предмет_19",
-        "Предмет_20",
-        "Предмет_21",
-        "Предмет_22",
-        "сум",
-        "количество_двоек_сейчас"
+        'Предмет_1',
+        'Предмет_2',
+        'Предмет_3',
+        'Предмет_4',
+        'Предмет_5',
+        'Предмет_6',
+        'Предмет_7',
+        'Предмет_8',
+        'Предмет_9',
+        'Предмет_10',
+        'Предмет_11',
+        'Предмет_12',
+        'Предмет_13',
+        'Предмет_14',
+        'Предмет_15',
+        'Предмет_16',
+        'Предмет_17',
+        'Предмет_18',
+        'Предмет_19',
+        'Предмет_20',
+        'Предмет_21',
+        'Предмет_22',
+        'сум',
+        'количество_двоек_сейчас',
+        'Курс',
+        'средняя_оценка'
     ]
 
-    # Categorical features
+    # Категориальные признаки
     cat_cols = [
-        "Уровень подготовки",
-        "Специальность/направление",
-        "Полугодие"
+        'Уровень подготовки',
+        'Специальность/направление',
+        'Полугодие'
     ]
+
+    loaded_ohe = joblib.load(os.path.abspath('model/one_hot_encoder.joblib'))
 
     loaded_ohe_transform = loaded_ohe.transform(filtered_df[cat_cols])
-    X_input = pd.concat([filtered_df[num_cols], loaded_ohe_transform], axis=1)
+    X_input = pd.concat([filtered_df[num_cols],loaded_ohe_transform],axis=1)
 
     return filtered_df["Номер ЛД"].values.tolist(), filtered_df["Учебный год"].values.tolist(), filtered_df["Полугодие"].values.tolist(), X_input
 
